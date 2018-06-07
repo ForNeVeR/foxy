@@ -2,25 +2,24 @@ namespace Foxy.Core
 
 open System
 
-type PlotElement internal
-    ( targetType: Type,
-      create: unit -> obj,
-      update: PlotElement option -> PlotElement -> obj -> unit,
+type PlotElement<'T> internal
+    ( create: unit -> obj,
+      update: PlotElement<'T> option -> PlotElement<'T> -> obj -> unit,
       attribsMap: Map<string, obj>,
       attribs: (string * obj)[] ) =
 
     let mutable attribsArray = attribs
 
-    new (targetType, create, update, attribs) =
-        PlotElement(targetType, create, update, Map.ofArray attribs, attribs)
+    new (create, update, attribs) =
+        PlotElement(create, update, Map.ofArray attribs, attribs)
 
-    member this.TargetType = targetType
+    member this.TargetType = typeof<'T>
 
     member this.Attributes = attribsMap
 
-    member this.TryGetAttribute<'T>(name: string) =
+    member this.TryGetAttribute<'Attr>(name: string) =
         match this.Attributes.TryFind(name) with
-        | Some v -> Some (unbox<'T>(v))
+        | Some v -> Some (unbox<'Attr>(v))
         | None -> None
 
     member this.Update(target: obj) =
@@ -28,7 +27,7 @@ type PlotElement internal
 
     member this.UpdateMethod = update
 
-    member this.UpdateIncremental(prev: PlotElement, target: obj) =
+    member this.UpdateIncremental(prev: PlotElement<'T>, target: obj) =
         update (Some prev) this target
 
     member this.CreateMethod = create
@@ -38,6 +37,7 @@ type PlotElement internal
         this.Update(target)
         target
 
-    member x.WithAttribute(name: string, value: obj) = PlotElement(targetType, create, update, attribsMap.Add(name, value), null)
+    member this.WithAttribute(name: string, value: obj) = 
+        PlotElement(create, update, attribsMap.Add(name, value), null)
 
-    override x.ToString() = sprintf "%s(...)@%d" x.TargetType.Name (x.GetHashCode())
+    override this.ToString() = sprintf "%s(...)@%d" this.TargetType.Name (this.GetHashCode())

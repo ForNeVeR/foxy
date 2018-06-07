@@ -42,8 +42,7 @@ module Dsl =
                     points = [for x in 0.0 .. 0.1 .. 1.0 -> (x, x*x)])
                 Foxy.LineSeries(
                     title = "LineSeries2",
-                    points = [for x in 0.0 .. 0.1 .. 1.0 -> (x + 0.2, x*x)]
-                )
+                    points = [for x in 0.0 .. 0.1 .. 1.0 -> (x + 0.2, x*x)])
             ])
 
 [<EntryPoint>]

@@ -5,7 +5,7 @@ type Point = float * float
 [<AutoOpen>]
 module PlotElementExtensions =
     
-    type PlotElement with
+    type PlotElement<'T> with
 
         member this.Title(value: string) =
             this.WithAttribute("Title", box value)
@@ -16,29 +16,29 @@ module PlotElementExtensions =
         member this.MarkerType(value: OxyPlot.MarkerType) =
             this.WithAttribute("MarkerType", box value)
            
-        member this.Axes(value: PlotElement list) =
+        member this.Axes(value: PlotElement<OxyPlot.Axes.Axis> list) =
             this.WithAttribute("Axes", box value)
 
         member this.Points(value: Point list) =
             this.WithAttribute("Points", box value)
           
-        member this.Series(value: PlotElement list) =
+        member this.Series(value: PlotElement<OxyPlot.Series.Series> list) =
             this.WithAttribute("Series", box value)
 
 module Utils = 
     
-    let updateAttribute<'T when 'T: equality> 
-        (prevOpt: PlotElement option) 
-        (source: PlotElement)
+    let updateAttribute<'T, 'Attr when 'T: equality and 'Attr: equality> 
+        (prevOpt: PlotElement<'T> option) 
+        (source: PlotElement<'T>)
         (name: string)
-        (set: 'T -> unit)
+        (set: 'Attr -> unit)
         (setDefault: unit -> unit) =
 
         let prevValueOpt =
             match prevOpt with
             | None -> None
-            | Some prev -> prev.TryGetAttribute<'T>(name)
-        let valueOpt = source.TryGetAttribute<'T>(name)
+            | Some prev -> prev.TryGetAttribute<'Attr>(name)
+        let valueOpt = source.TryGetAttribute<'Attr>(name)
         match prevValueOpt, valueOpt with
         | Some prevValue, Some value when prevValue = value -> ()
         | _, Some value -> set value
@@ -47,7 +47,10 @@ module Utils =
 
 type Foxy() =
 
-    static member PlotModel(?title: string, ?axes: PlotElement list, ?series: PlotElement list) =
+    static member PlotModel(?title: string, 
+                            ?axes: PlotElement<OxyPlot.Axes.Axis> list, 
+                            ?series: PlotElement<OxyPlot.Series.Series> list) =
+        
         let attribs =
             [| match title with None -> () | Some v -> yield ("Title", box v)
                match axes with None -> () | Some v -> yield ("Axes", box v)
@@ -56,17 +59,19 @@ type Foxy() =
 
         let create() = box (new OxyPlot.PlotModel())
 
-        let update (prevOpt: PlotElement option) (source: PlotElement) (targetObj: obj) =
+        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.PlotModel)
             let inline updateAttribute name set setDefault = 
                 Utils.updateAttribute prevOpt source name set setDefault
 
-            let setAxes (target: OxyPlot.PlotModel) (axes: PlotElement list) =
+            let setAxes (target: OxyPlot.PlotModel) 
+                        (axes: PlotElement<OxyPlot.Axes.Axis> list) =
                 axes |> List.iter (fun o -> 
                     let axis = (o.Create()) :?> OxyPlot.Axes.Axis
                     target.Axes.Add(axis))
 
-            let setSeries (target: OxyPlot.PlotModel) (series: PlotElement list) =
+            let setSeries (target: OxyPlot.PlotModel) 
+                          (series: PlotElement<OxyPlot.Series.Series> list) =
                 series |> List.iter (fun s ->
                     let ser = (s.Create()) :?> OxyPlot.Series.Series
                     target.Series.Add(ser))
@@ -86,7 +91,7 @@ type Foxy() =
                 (fun series -> setSeries target series)
                 (fun ()     -> target.Series.Clear())                                   
         
-        new PlotElement(typeof<OxyPlot.PlotModel>, create, update, attribs)
+        new PlotElement<OxyPlot.PlotModel>(create, update, attribs)
 
     static member LinearAxis(?position: OxyPlot.Axes.AxisPosition) =
         let attribs = 
@@ -95,7 +100,7 @@ type Foxy() =
 
         let create() = box (new OxyPlot.Axes.LinearAxis())
 
-        let update (prevOpt: PlotElement option) (source: PlotElement) (targetObj: obj) =
+        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.Axes.LinearAxis)
             let inline updateAttribute name set setDefault = 
                 Utils.updateAttribute prevOpt source name set setDefault
@@ -105,7 +110,7 @@ type Foxy() =
                 (fun pos -> target.Position <- pos)
                 (fun ()  -> target.Position <- OxyPlot.Axes.AxisPosition.None)
         
-        new PlotElement(typeof<OxyPlot.Axes.LinearAxis>, create, update, attribs)
+        new PlotElement<OxyPlot.Axes.Axis>(create, update, attribs)
 
 
     static member LineSeries(points: Point list, ?title: string, ?markerType: OxyPlot.MarkerType) =
@@ -117,7 +122,7 @@ type Foxy() =
 
         let create() = box (new OxyPlot.Series.LineSeries())
 
-        let update (prevOpt: PlotElement option) (source: PlotElement) (targetObj: obj) =
+        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.Series.LineSeries)
             let inline updateAttribute name set setDefault = 
                 Utils.updateAttribute prevOpt source name set setDefault
@@ -142,4 +147,4 @@ type Foxy() =
                 (fun markType -> target.MarkerType <- markType)
                 (fun ()       -> target.MarkerType <- OxyPlot.MarkerType.None)
 
-        new PlotElement(typeof<OxyPlot.Series.LineSeries>, create, update, attribs)
+        new PlotElement<OxyPlot.Series.Series>(create, update, attribs)
