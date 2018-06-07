@@ -25,6 +25,25 @@ module PlotElementExtensions =
         member this.Series(value: PlotElement list) =
             this.WithAttribute("Series", box value)
 
+module Utils = 
+    
+    let updateAttribute<'T when 'T: equality> 
+        (prevOpt: PlotElement option) 
+        (source: PlotElement)
+        (name: string)
+        (set: 'T -> unit)
+        (setDefault: unit -> unit) =
+
+        let prevValueOpt =
+            match prevOpt with
+            | None -> None
+            | Some prev -> prev.TryGetAttribute<'T>(name)
+        let valueOpt = source.TryGetAttribute<'T>(name)
+        match prevValueOpt, valueOpt with
+        | Some prevValue, Some value when prevValue = value -> ()
+        | _, Some value -> set value
+        | Some _, None -> setDefault ()
+        | None, None -> ()
 
 type Foxy() =
 
@@ -39,52 +58,33 @@ type Foxy() =
 
         let update (prevOpt: PlotElement option) (source: PlotElement) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.PlotModel)
-
-            // update Title
-            let prevValueOpt =
-                match prevOpt with
-                | None -> None
-                | Some prev -> prev.TryGetAttribute<string>("Title")
-            let valueOpt = source.TryGetAttribute<string>("Title")
-            match prevValueOpt, valueOpt with
-            | Some pv, Some v when pv = v -> ()
-            | pOpt, Some v -> target.Title <- v
-            | Some _, None -> target.Title <- ""
-            | None, None -> ()
+            let inline updateAttribute name set setDefault = 
+                Utils.updateAttribute prevOpt source name set setDefault
 
             let setAxes (target: OxyPlot.PlotModel) (axes: PlotElement list) =
                 axes |> List.iter (fun o -> 
                     let axis = (o.Create()) :?> OxyPlot.Axes.Axis
                     target.Axes.Add(axis))
 
-            // update Axes
-            let prevValueOpt =
-                match prevOpt with
-                | None -> None
-                | Some prev -> prev.TryGetAttribute<PlotElement list>("Axes")
-            let valueOpt = source.TryGetAttribute<PlotElement list>("Axes")
-            match prevValueOpt, valueOpt with
-            | Some pv, Some v when pv = v -> ()
-            | pOpt, Some v -> setAxes target v
-            | Some _, None -> target.Axes.Clear()
-            | None, None -> ()
-
             let setSeries (target: OxyPlot.PlotModel) (series: PlotElement list) =
                 series |> List.iter (fun s ->
                     let ser = (s.Create()) :?> OxyPlot.Series.Series
                     target.Series.Add(ser))
 
-            // update Series
-            let prevValueOpt =
-                match prevOpt with
-                | None -> None
-                | Some prev -> prev.TryGetAttribute<PlotElement list>("Series")
-            let valueOpt = source.TryGetAttribute<PlotElement list>("Series")
-            match prevValueOpt, valueOpt with
-            | Some pv, Some v when pv = v -> ()
-            | pOpt, Some v -> setSeries target v
-            | Some _, None -> target.Series.Clear()
-            | None, None -> ()
+            updateAttribute 
+                "Title" 
+                (fun title -> target.Title <- title) 
+                (fun ()    -> target.Title <- "") 
+
+            updateAttribute
+                "Axes"
+                (fun axes -> setAxes target axes)
+                (fun ()   -> target.Axes.Clear())
+
+            updateAttribute
+                "Series"
+                (fun series -> setSeries target series)
+                (fun ()     -> target.Series.Clear())                                   
         
         new PlotElement(typeof<OxyPlot.PlotModel>, create, update, attribs)
 
@@ -97,16 +97,13 @@ type Foxy() =
 
         let update (prevOpt: PlotElement option) (source: PlotElement) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.Axes.LinearAxis)
-            let prevValueOpt =
-                match prevOpt with
-                | None -> None
-                | Some prev -> prev.TryGetAttribute<OxyPlot.Axes.AxisPosition>("Position")
-            let valueOpt = source.TryGetAttribute<OxyPlot.Axes.AxisPosition>("Position")
-            match prevValueOpt, valueOpt with
-            | Some pv, Some v when pv = v -> ()
-            | pOpt, Some v -> target.Position <- v
-            | Some _, None -> target.Position <- OxyPlot.Axes.AxisPosition.None
-            | None, None -> ()
+            let inline updateAttribute name set setDefault = 
+                Utils.updateAttribute prevOpt source name set setDefault
+            
+            updateAttribute 
+                "Position"
+                (fun pos -> target.Position <- pos)
+                (fun ()  -> target.Position <- OxyPlot.Axes.AxisPosition.None)
         
         new PlotElement(typeof<OxyPlot.Axes.LinearAxis>, create, update, attribs)
 
@@ -120,46 +117,29 @@ type Foxy() =
 
         let create() = box (new OxyPlot.Series.LineSeries())
 
-        let setPoints (target: OxyPlot.Series.LineSeries) (points: Point list) =
-            points |> List.iter (fun (x, y) -> target.Points.Add(new OxyPlot.DataPoint(x, y)))
-
         let update (prevOpt: PlotElement option) (source: PlotElement) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.Series.LineSeries)
+            let inline updateAttribute name set setDefault = 
+                Utils.updateAttribute prevOpt source name set setDefault
 
-            // update Points
-            let prevValueOpt =
-                match prevOpt with
-                | None -> None
-                | Some prev -> prev.TryGetAttribute<Point list>("Points")
-            let valueOpt = source.TryGetAttribute<Point list>("Points")
-            match prevValueOpt, valueOpt with
-            | Some pv, Some v when pv = v -> ()
-            | pOpt, Some v -> setPoints target v
-            | Some _, None -> target.Points.Clear()
-            | None, None -> ()
+            let setPoints (target: OxyPlot.Series.LineSeries) (points: Point list) =
+                points |> 
+                List.iter (fun (x, y) -> 
+                    target.Points.Add(new OxyPlot.DataPoint(x, y)))
 
-            // update Title
-            let prevValueOpt =
-                match prevOpt with
-                | None -> None
-                | Some prev -> prev.TryGetAttribute<string>("Title")
-            let valueOpt = source.TryGetAttribute<string>("Title")
-            match prevValueOpt, valueOpt with
-            | Some pv, Some v when pv = v -> ()
-            | pOpt, Some v -> target.Title <- v
-            | Some _, None -> target.Title <- ""
-            | None, None -> ()
+            updateAttribute
+                "Points"
+                (fun points -> setPoints target points)
+                (fun ()     -> target.Points.Clear())
 
-            // update MarkerType
-            let prevValueOpt =
-                match prevOpt with
-                | None -> None
-                | Some prev -> prev.TryGetAttribute<OxyPlot.MarkerType>("MarkerType")
-            let valueOpt = source.TryGetAttribute<OxyPlot.MarkerType>("MarkerType")
-            match prevValueOpt, valueOpt with
-            | Some pv, Some v when pv = v -> ()
-            | pOpt, Some v -> target.MarkerType <- v
-            | Some _, None -> target.MarkerType <- OxyPlot.MarkerType.None
-            | None, None -> ()
+            updateAttribute
+                "Title"
+                (fun title -> target.Title <- title)
+                (fun ()    -> target.Title <- "")
+
+            updateAttribute
+                "MarkerType"
+                (fun markType -> target.MarkerType <- markType)
+                (fun ()       -> target.MarkerType <- OxyPlot.MarkerType.None)
 
         new PlotElement(typeof<OxyPlot.Series.LineSeries>, create, update, attribs)
