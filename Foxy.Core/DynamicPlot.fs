@@ -57,7 +57,7 @@ type Foxy() =
                match series with None -> () | Some v -> yield ("Series", box v)
             |]
 
-        let create() = box (new OxyPlot.PlotModel())
+        let create() = new OxyPlot.PlotModel()
 
         let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.PlotModel)
@@ -67,13 +67,13 @@ type Foxy() =
             let setAxes (target: OxyPlot.PlotModel) 
                         (axes: PlotElement<OxyPlot.Axes.Axis> list) =
                 axes |> List.iter (fun o -> 
-                    let axis = (o.Create()) :?> OxyPlot.Axes.Axis
+                    let axis = o.Create()
                     target.Axes.Add(axis))
 
             let setSeries (target: OxyPlot.PlotModel) 
                           (series: PlotElement<OxyPlot.Series.Series> list) =
                 series |> List.iter (fun s ->
-                    let ser = (s.Create()) :?> OxyPlot.Series.Series
+                    let ser = s.Create()
                     target.Series.Add(ser))
 
             updateAttribute 
@@ -98,7 +98,7 @@ type Foxy() =
             [| match position with None -> () | Some v -> yield ("Position", box v)
             |]
 
-        let create() = box (new OxyPlot.Axes.LinearAxis())
+        let create() : OxyPlot.Axes.Axis = upcast (new OxyPlot.Axes.LinearAxis())
 
         let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.Axes.LinearAxis)
@@ -120,7 +120,7 @@ type Foxy() =
                match markerType with None -> () | Some v -> yield ("MarkerType", box v)
             |]
 
-        let create() = box (new OxyPlot.Series.LineSeries())
+        let create() : OxyPlot.Series.Series = upcast (new OxyPlot.Series.LineSeries())
 
         let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
             let target = (targetObj :?> OxyPlot.Series.LineSeries)

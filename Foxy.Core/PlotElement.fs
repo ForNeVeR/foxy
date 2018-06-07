@@ -3,8 +3,8 @@ namespace Foxy.Core
 open System
 
 type PlotElement<'T> internal
-    ( create: unit -> obj,
-      update: PlotElement<'T> option -> PlotElement<'T> -> obj -> unit,
+    ( create: unit -> 'T,
+      update: PlotElement<'T> option -> PlotElement<'T> -> 'T -> unit,
       attribsMap: Map<string, obj>,
       attribs: (string * obj)[] ) =
 
@@ -22,17 +22,17 @@ type PlotElement<'T> internal
         | Some v -> Some (unbox<'Attr>(v))
         | None -> None
 
-    member this.Update(target: obj) =
+    member this.Update(target: 'T) =
         update None this target
 
     member this.UpdateMethod = update
 
-    member this.UpdateIncremental(prev: PlotElement<'T>, target: obj) =
+    member this.UpdateIncremental(prev: PlotElement<'T>, target: 'T) =
         update (Some prev) this target
 
     member this.CreateMethod = create
 
-    member this.Create() : obj =
+    member this.Create() : 'T =
         let target = this.CreateMethod()
         this.Update(target)
         target

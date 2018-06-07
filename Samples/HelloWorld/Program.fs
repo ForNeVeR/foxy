@@ -49,5 +49,5 @@ module Dsl =
 let main argv =
     use stream = File.Create("sample.pdf")  
     let pdfExporter = new OxyPlot.PdfExporter(Width = 600., Height = 400.)
-    pdfExporter.Export(Dsl.sample.Create() :?> OxyPlot.IPlotModel, stream)
+    pdfExporter.Export(Dsl.sample.Create(), stream)
     0 // return an integer exit code
