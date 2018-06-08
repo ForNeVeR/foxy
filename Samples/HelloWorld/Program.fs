@@ -37,11 +37,9 @@ module Dsl =
                 Foxy.LinearAxis(position = AxisPosition.Left)
             ],
             series = [
-                Foxy.LineSeries(
-                    title = "LineSeries",
+                Foxy.LineSeries(title = "LineSeries",
                     points = [for x in 0.0 .. 0.1 .. 1.0 -> (x, x*x)])
-                Foxy.LineSeries(
-                    title = "LineSeries2",
+                Foxy.LineSeries(title = "LineSeries2",
                     points = [for x in 0.0 .. 0.1 .. 1.0 -> (x + 0.2, x*x)])
             ])
 
