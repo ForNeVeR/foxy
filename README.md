@@ -1,8 +1,8 @@
-# Foxy
+# Foxy [![Status Umbra][status-umbra]][andivionian-status-classifier]
 
 Experimental F# eDSL for OxyPlot charting library
 
-Inspired by [Elmish.XamarinForms](https://github.com/fsprojects/Elmish.XamarinForms)
+Inspired by [Elmish.XamarinForms][elmish-xamarin-forms]
 
 ## Example
 
@@ -25,8 +25,14 @@ Foxy.PlotModel(
 
 ## Build
 
-[.NET Core SDK](https://www.microsoft.com/net/download/windows#/sdk) is required to build the project.
+[.NET Core SDK][net-core-sdk] is required to build the project.
 
 ```
 $ dotnet build .\Foxy.Core\Foxy.Core.fsproj
 ```
+
+[andivionian-status-classifier]: https://github.com/ForNeVeR/andivionian-status-classifier#status-umbra-
+[status-umbra]: https://img.shields.io/badge/status-umbra-red.svg
+
+[elmish-xamarin-forms]: https://github.com/fsprojects/Elmish.XamarinForms
+[net-core-sdk]: https://www.microsoft.com/net/download/core#/sdk
