@@ -1,6 +1,6 @@
 # Foxy [![Status Umbra][status-umbra]][andivionian-status-classifier]
 
-Experimental F# eDSL for OxyPlot charting library
+Experimental F# eDSL for [OxyPlot][oxyplot] charting library
 
 Inspired by [Elmish.XamarinForms][elmish-xamarin-forms]
 
@@ -34,5 +34,6 @@ $ dotnet build .\Foxy.Core\Foxy.Core.fsproj
 [andivionian-status-classifier]: https://github.com/ForNeVeR/andivionian-status-classifier#status-umbra-
 [status-umbra]: https://img.shields.io/badge/status-umbra-red.svg
 
+[oxyplot]: https://github.com/oxyplot/oxyplot/
 [elmish-xamarin-forms]: https://github.com/fsprojects/Elmish.XamarinForms
 [net-core-sdk]: https://www.microsoft.com/net/download/core#/sdk
