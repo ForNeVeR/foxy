@@ -59,8 +59,8 @@ type Foxy() =
 
         let create() = new OxyPlot.PlotModel()
 
-        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
-            let target = (targetObj :?> OxyPlot.PlotModel)
+        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: OxyPlot.PlotModel) =
+            let target = targetObj
             let inline updateAttribute name set setDefault = 
                 Utils.updateAttribute prevOpt source name set setDefault
 
@@ -100,7 +100,7 @@ type Foxy() =
 
         let create() : OxyPlot.Axes.Axis = upcast (new OxyPlot.Axes.LinearAxis())
 
-        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
+        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: OxyPlot.Axes.Axis) =
             let target = (targetObj :?> OxyPlot.Axes.LinearAxis)
             let inline updateAttribute name set setDefault = 
                 Utils.updateAttribute prevOpt source name set setDefault
@@ -113,24 +113,23 @@ type Foxy() =
         new PlotElement<OxyPlot.Axes.Axis>(create, update, attribs)
 
 
-    static member LineSeries(points: Point list, ?title: string, ?markerType: OxyPlot.MarkerType) =
+    static member LineSeries(?points: Point list, ?title: string, ?markerType: OxyPlot.MarkerType) =
         let attribs =
-            [| yield ("Points", box points)
+            [| match points with None -> () | Some v -> yield ("Points", box v)
                match title with None -> () | Some v -> yield ("Title", box v)
                match markerType with None -> () | Some v -> yield ("MarkerType", box v)
             |]
 
         let create() : OxyPlot.Series.Series = upcast (new OxyPlot.Series.LineSeries())
 
-        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: obj) =
+        let update (prevOpt: PlotElement<_> option) (source: PlotElement<_>) (targetObj: OxyPlot.Series.Series) =
             let target = (targetObj :?> OxyPlot.Series.LineSeries)
-            let inline updateAttribute name set setDefault = 
+            let updateAttribute name set setDefault = 
                 Utils.updateAttribute prevOpt source name set setDefault
 
             let setPoints (target: OxyPlot.Series.LineSeries) (points: Point list) =
-                points |> 
-                List.iter (fun (x, y) -> 
-                    target.Points.Add(new OxyPlot.DataPoint(x, y)))
+                for (x, y) in points do
+                    target.Points.Add(new OxyPlot.DataPoint(x, y))
 
             updateAttribute
                 "Points"

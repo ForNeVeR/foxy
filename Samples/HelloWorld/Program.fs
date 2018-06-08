@@ -29,7 +29,7 @@ module NoDsl =
 
 module Dsl =
     open OxyPlot.Axes
-    let sample = 
+    let sampleA = 
         Foxy.PlotModel(
             title = "Hello World from F#",
             axes = [
@@ -49,5 +49,5 @@ module Dsl =
 let main argv =
     use stream = File.Create("sample.pdf")  
     let pdfExporter = new OxyPlot.PdfExporter(Width = 600., Height = 400.)
-    pdfExporter.Export(Dsl.sample.Create(), stream)
+    pdfExporter.Export(Dsl.sampleA.Create(), stream)
     0 // return an integer exit code
